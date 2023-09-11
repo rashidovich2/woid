@@ -28,17 +28,18 @@ def month_calendar(year, month, days, service):
     month_name = calendar.month_name[int(month)]
     month_href = reverse('services:month', args=(service.slug, year, month))
 
-    html = '<table><thead>'
-    html += '<tr><th colspan="7"><a href="{0}">{1}</a></th></tr>'.format(month_href, month_name)
+    html = (
+        '<table><thead>'
+        + '<tr><th colspan="7"><a href="{0}">{1}</a></th></tr>'.format(
+            month_href, month_name
+        )
+    )
     html += '<tr><th>s</th><th>m</th><th>t</th><th>w</th><th>t</th><th>f</th><th>s</th></tr>'
     html += '</thead><tbody>'
     for week in month_calendar:
         html += '<tr>'
         for day in week:
-            if day == 0:
-                str_day = ''
-            else:
-                str_day = str(day).zfill(2)
+            str_day = '' if day == 0 else str(day).zfill(2)
             if str_day in days:
                 day_href = reverse('services:day', args=(service.slug, year, month, str_day))
                 html += '<td><a href="{0}">{1}</a></td>'.format(day_href, str_day)

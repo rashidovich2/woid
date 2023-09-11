@@ -36,7 +36,10 @@ WSGI_APPLICATION = 'woid.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='sqlite:///%s' % os.path.join(BASE_DIR, 'db.sqlite3'))
+        default=config(
+            'DATABASE_URL',
+            default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+        )
     )
 }
 

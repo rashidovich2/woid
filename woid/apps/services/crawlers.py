@@ -78,13 +78,11 @@ class HackerNewsCrawler(AbstractBaseCrawler):
                 story.score = score
                 story.title = story_data.get('title', '')
 
-                url = story_data.get('url', '')
-                if url:
+                if url := story_data.get('url', ''):
                     story.content_type = Story.URL
                     story.content = url
 
-                text = story_data.get('text', '')
-                if text:
+                if text := story_data.get('text', ''):
                     story.content_type = Story.TEXT
                     story.content = text
 
@@ -159,23 +157,16 @@ class GithubCrawler(AbstractBaseCrawler):
                 # got in a single day
                 has_changes = (stars > story.score)
 
-                if story.status == Story.NEW:
+                if story.status == Story.NEW or has_changes:
                     story.score = stars
-                elif has_changes:
-                    # update = StoryUpdate(story=story)
-                    # update.score_changes = stars - story.score
-                    # update.save()
-                    story.score = stars
-
                 story.title = data.get('name')[1:]
 
                 description = data.get('description', '')
-                language = data.get('language', '')
-
-                if language and description:
-                    description = '{0} • {1}'.format(language, description)
-                elif language:
-                    description = language
+                if language := data.get('language', ''):
+                    if description:
+                        description = '{0} • {1}'.format(language, description)
+                    else:
+                        description = language
 
                 story.description = description
 

@@ -22,26 +22,25 @@ class HackerNewsClient(AbstractBaseClient):
 
     def request(self, endpoint):
         r = requests.get(endpoint, headers=self.headers)
-        result = r.json()
-        return result
+        return r.json()
 
     def get_top_stories(self):
-        endpoint = '%s/v0/topstories.json' % self.base_url
+        endpoint = f'{self.base_url}/v0/topstories.json'
         return self.request(endpoint)
 
     def get_story(self, code):
-        endpoint = '%s/v0/item/%s.json' % (self.base_url, code)
+        endpoint = f'{self.base_url}/v0/item/{code}.json'
         return self.request(endpoint)
 
     def get_max_item(self):
-        endpoint = '%s/v0/maxitem.json' % self.base_url
+        endpoint = f'{self.base_url}/v0/maxitem.json'
         return self.request(endpoint)
 
 
 class RedditClient(AbstractBaseClient):
 
     def get_front_page_stories(self):
-        stories = list()
+        stories = []
 
         try:
             r = requests.get('https://www.reddit.com/.json', headers=self.headers)
@@ -60,20 +59,14 @@ class GithubClient(AbstractBaseClient):
         html = r.text
         soup = BeautifulSoup(html, 'html.parser')
         repos = soup.select('ol.repo-list li')
-        data = list()
+        data = []
         for repo in repos:
-            repo_data = dict()
-            repo_data['name'] = repo.h3.a.get('href')
-
+            repo_data = {'name': repo.h3.a.get('href')}
             description = repo.p.text
-            if description:
-                description = description.strip()
-            else:
-                description = ''
+            description = description.strip() if description else ''
             repo_data['description'] = description
 
-            lang = repo.find(attrs={'itemprop': 'programmingLanguage'})
-            if lang:
+            if lang := repo.find(attrs={'itemprop': 'programmingLanguage'}):
                 repo_data['language'] = lang.text.strip()
             else:
                 repo_data['language'] = ''
@@ -92,16 +85,13 @@ class NYTimesClient(AbstractBaseClient):
     base_url = 'http://api.nytimes.com/svc/mostpopular/v2/'
 
     def get_most_popular_stories(self):
-        data = dict()
-
         mostviewed_endpoint = '{0}mostviewed/all-sections/1.json?api-key={1}'.format(
             self.base_url,
             settings.NYTIMES_API_KEY
         )
         r = requests.get(mostviewed_endpoint, headers=self.headers)
         json_data = r.json()
-        data['mostviewed'] = json_data['results']
-
+        data = {'mostviewed': json_data['results']}
         mostemailed_endpoint = '{0}mostemailed/all-sections/1.json?api-key={1}'.format(
             self.base_url,
             settings.NYTIMES_API_KEY
@@ -127,13 +117,16 @@ class ProductHuntClient(AbstractBaseClient):
         extra_headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer %s' % settings.PRODUCT_HUNT_TOKEN,
-            'Host': 'api.producthunt.com'
+            'Authorization': f'Bearer {settings.PRODUCT_HUNT_TOKEN}',
+            'Host': 'api.producthunt.com',
         }
         self.headers.update(extra_headers)
 
     def get_top_posts(self):
         today = timezone.now().strftime('%Y-%m-%d')
-        r = requests.get('https://api.producthunt.com/v1/posts?day=%s' % today, headers=self.headers)
+        r = requests.get(
+            f'https://api.producthunt.com/v1/posts?day={today}',
+            headers=self.headers,
+        )
         data = r.json()
         return data['posts']

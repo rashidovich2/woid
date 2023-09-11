@@ -24,48 +24,45 @@ def stories(request, service, queryset, subtitle):
     except EmptyPage:
         stories = paginator.page(paginator.num_pages)
 
-    if stories.number > 1:
-        start = (stories.number - 1) * 100 + 1
-    else:
-        start = 1
-
-    if 'application/json' in request.META.get('HTTP_ACCEPT'):
-        stories_dict = map(lambda story: story.to_dict(), stories)
-        dump = json.dumps({
-            'service': service.to_dict(),
-            'stories': stories_dict,
-            'subtitle': subtitle
-        })
-        return HttpResponse(dump, content_type='application/json')
-    else:
+    start = (stories.number - 1) * 100 + 1 if stories.number > 1 else 1
+    if 'application/json' not in request.META.get('HTTP_ACCEPT'):
         return render(request, 'services/stories.html', {
             'service': service,
             'stories': stories,
             'subtitle': subtitle,
             'start': start
         })
+    stories_dict = map(lambda story: story.to_dict(), stories)
+    dump = json.dumps({
+        'service': service.to_dict(),
+        'stories': stories_dict,
+        'subtitle': subtitle
+    })
+    return HttpResponse(dump, content_type='application/json')
 
 
 @cache_page(60)
 def front_page(request):
     today = timezone.now()
-    stories = list()
+    stories = []
     services = Service.objects.all()
     for service in services:
-        top_story = service.stories.filter(status=Story.OK, date=today).order_by('-score').first()
-        if top_story:
+        if (
+            top_story := service.stories.filter(status=Story.OK, date=today)
+            .order_by('-score')
+            .first()
+        ):
             stories.append(top_story)
     subtitle = today.strftime('%d %b %Y')
 
-    if 'application/json' in request.META.get('HTTP_ACCEPT'):
-        stories_dict = map(lambda story: story.to_dict(), stories)
-        dump = json.dumps({
-            'stories': stories_dict,
-            'subtitle': subtitle
-        })
-        return HttpResponse(dump, content_type='application/json')
-    else:
+    if 'application/json' not in request.META.get('HTTP_ACCEPT'):
         return render(request, 'services/front_page.html', {'stories': stories, 'subtitle': subtitle})
+    stories_dict = map(lambda story: story.to_dict(), stories)
+    dump = json.dumps({
+        'stories': stories_dict,
+        'subtitle': subtitle
+    })
+    return HttpResponse(dump, content_type='application/json')
 
 
 @cache_page(60)
@@ -118,15 +115,11 @@ def archive(request, slug):
     for year, months in groupby(str_dates, lambda date: date[:4]):
         archive[year] = OrderedDict()
         for month, days in groupby(months, lambda date: date[5:7]):
-            archive[year][month] = list()
-            for day in days:
-                archive[year][month].append(day[8:10])
-
-    if 'application/json' in request.META.get('HTTP_ACCEPT'):
-        dump = json.dumps(archive)
-        return HttpResponse(dump, content_type='application/json')
-    else:
+            archive[year][month] = [day[8:10] for day in days]
+    if 'application/json' not in request.META.get('HTTP_ACCEPT'):
         return render(request, 'services/archive.html', {
             'service': service,
             'archive': archive
         })
+    dump = json.dumps(archive)
+    return HttpResponse(dump, content_type='application/json')

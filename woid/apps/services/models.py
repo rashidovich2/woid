@@ -36,8 +36,7 @@ class Service(models.Model):
         }
 
     def get_story_template(self):
-        template = 'services/includes/{0}_story.html'.format(self.slug)
-        return template
+        return 'services/includes/{0}_story.html'.format(self.slug)
 
 
 class Story(models.Model):

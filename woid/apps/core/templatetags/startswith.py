@@ -7,7 +7,5 @@ register = template.Library()
 
 @register.filter('startswith')
 def startswith(text, starts):
-    starts = '/%s/' % starts
-    if isinstance(text, str):
-        return text.startswith(starts)
-    return False
+    starts = f'/{starts}/'
+    return text.startswith(starts) if isinstance(text, str) else False
